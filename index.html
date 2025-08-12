@@ -3,144 +3,242 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR-coach</title>
+<title>QR Coach</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;margin:0;padding:20px;display:flex;justify-content:center}
-  .container{width:100%;max-width:800px;background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 24px rgba(20,30,50,0.08)}
-  h1{margin:0 0 16px;font-size:28px}
-  .row{display:flex;gap:16px;flex-wrap:wrap}
-  .col{flex:1;min-width:220px}
-  label{display:block;margin:10px 0 6px;font-weight:600;font-size:16px}
-  .equip-list{display:flex;flex-direction:column;gap:6px}
-  button{background:#2f9e44;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
-  button.secondary{background:#667085}
-  .plan{margin-top:20px;border-radius:10px;padding:16px;background:#fbfdff;border:1px solid #e6eef8;font-size:16px;line-height:1.5}
-  .exercise{padding:10px;border-radius:8px;background:#fff;border:1px solid #eef3fa;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-  .exercise .left{max-width:70%}
-  small{color:#6b7280}
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: linear-gradient(135deg, #1f4037, #99f2c8);
+        color: #fff;
+    }
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 30px;
+        background: rgba(0,0,0,0.4);
+    }
+    h1 {
+        margin: 0;
+        font-size: 1.8em;
+    }
+    .lang-select select {
+        padding: 5px 10px;
+        font-size: 1em;
+        border-radius: 5px;
+        border: none;
+    }
+    main {
+        max-width: 900px;
+        margin: 20px auto;
+        background: rgba(0,0,0,0.5);
+        padding: 20px;
+        border-radius: 10px;
+    }
+    label {
+        display: block;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+    .equipment-list input {
+        margin-right: 5px;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 15px;
+        font-size: 1em;
+        background: #ff9800;
+        border: none;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #e68900;
+    }
+    .exercise {
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 5px;
+    }
+    .exercise a {
+        color: #ffd54f;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .exercise a:hover {
+        text-decoration: underline;
+    }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>QR-coach</h1>
-  <div class="row">
-    <div class="col">
-      <label>Выберите оборудование (можно несколько):</label>
-      <div class="equip-list">
-        <label><input type="checkbox" value="bar" class="equip"> Турник</label>
-        <label><input type="checkbox" value="dip" class="equip"> Брусья</label>
-        <label><input type="checkbox" value="bench" class="equip"> Лавочка</label>
-        <label><input type="checkbox" value="decline" class="equip"> Наклонная скамья для пресса</label>
-        <label><input type="checkbox" value="wallbar" class="equip"> Шведская стенка</label>
-      </div>
+
+<header>
+    <h1 id="title">QR Coach</h1>
+    <div class="lang-select">
+        <select id="language">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="kz">Қазақша</option>
+        </select>
+    </div>
+</header>
+
+<main>
+    <label id="equipment-label"></label>
+    <div class="equipment-list">
+        <label><input type="checkbox" value="pullup_bar"> <span id="pullup_bar"></span></label>
+        <label><input type="checkbox" value="dip_bars"> <span id="dip_bars"></span></label>
+        <label><input type="checkbox" value="bench"> <span id="bench"></span></label>
+        <label><input type="checkbox" value="incline_bench"> <span id="incline_bench"></span></label>
+        <label><input type="checkbox" value="swedish_wall"> <span id="swedish_wall"></span></label>
     </div>
 
-    <div class="col">
-      <label>Уровень подготовки:</label>
-      <select id="level">
-        <option value="beginner">Начинающий</option>
-        <option value="intermediate">Средний</option>
-        <option value="advanced">Продвинутый</option>
-      </select>
+    <label id="level-label"></label>
+    <select id="level">
+        <option value="beginner"></option>
+        <option value="intermediate"></option>
+        <option value="advanced"></option>
+    </select>
 
-      <label>Группа мышц:</label>
-      <select id="goal">
-        <option value="chest">Грудь</option>
-        <option value="back">Спина</option>
-        <option value="abs">Пресс</option>
-        <option value="arms">Руки</option>
-        <option value="legs">Ноги</option>
-        <option value="cardio">Кардио</option>
-      </select>
+    <label id="goal-label"></label>
+    <select id="goal">
+        <option value="chest"></option>
+        <option value="back"></option>
+        <option value="abs"></option>
+        <option value="arms"></option>
+        <option value="legs"></option>
+        <option value="cardio"></option>
+    </select>
 
-      <div style="margin-top:12px"><button onclick="generatePlan()">Показать план</button></div>
-    </div>
-  </div>
+    <button id="generate-btn"></button>
 
-  <div id="plan" class="plan" style="display:none"></div>
-</div>
+    <div id="workout-plan"></div>
+</main>
 
 <script>
-const EXERCISES = [
-  {id:'skakalka', name:'Скакалка', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=UZs7YFGms5U'},
-  {id:'burpee', name:'Берпи', equip:[], muscles:['cardio','fullbody'], video:'https://www.youtube.com/watch?v=50-0F_gQHFI'},
-  {id:'jump_star', name:'Прыжки «звёздочка»', equip:[], muscles:['cardio','legs'], video:'https://www.youtube.com/watch?v=W25ARtL80Yc'},
-  {id:'run_place', name:'Бег на месте', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=jZe2r6Uc4Ng'},
-  {id:'pull_up', name:'Подтягивания классические', equip:['bar'], muscles:['back','arms'], video:'https://www.youtube.com/watch?v=Smb8BTBBomc'},
-  {id:'pull_up_rev', name:'Подтягивания обратным хватом', equip:['bar'], muscles:['back','arms'], video:'https://www.youtube.com/watch?v=dU6TUDI6Iy8'},
-  {id:'pull_up_wide', name:'Подтягивания широким хватом', equip:['bar'], muscles:['back'], video:'https://www.youtube.com/watch?v=nZfjZn6IH-M'},
-  {id:'knee_raise_hang', name:'Подъём коленей/ног в висе', equip:['bar'], muscles:['abs'], video:'https://www.youtube.com/watch?v=DiboGq-6Xkw'},
-  {id:'dips', name:'Отжимания на брусьях', equip:['dip'], muscles:['chest','arms'], video:'https://www.youtube.com/watch?v=pF_3A66lxpQ'},
-  {id:'knee_raise_dip', name:'Подъём коленей в упоре на брусьях', equip:['dip'], muscles:['abs'], video:'https://www.youtube.com/watch?v=8HLQfi58xhA'},
-  {id:'bench_push_feet', name:'Отжимания ногами на лавке', equip:['bench'], muscles:['chest','legs'], video:'https://www.youtube.com/watch?v=zPTf2Ub_kEs'},
-  {id:'bench_tricep', name:'Обратные отжимания на лавке (трицепс)', equip:['bench'], muscles:['arms'], video:'https://www.youtube.com/watch?v=C6QV5J1gulk'},
-  {id:'box_jump', name:'Прыжки на лавку', equip:['bench'], muscles:['legs','cardio'], video:'https://www.youtube.com/watch?v=oPzFzX87dE4'},
-  {id:'bulgarian', name:'Болгарские выпады с опорой на лавку', equip:['bench'], muscles:['legs'], video:'https://www.youtube.com/watch?v=Ol21mdPfmJs'},
-  {id:'decline_crunch', name:'Скручивания на наклонной скамье', equip:['decline'], muscles:['abs'], video:'https://www.youtube.com/watch?v=7j2xB1SR6jw'},
-  {id:'russian_twist', name:'Русский твист', equip:['decline'], muscles:['abs'], video:'https://www.youtube.com/watch?v=s1MPXo84gFA'},
-  {id:'wallbar_plank', name:'Планка с упором ног в шведской стенке', equip:['wallbar'], muscles:['abs','core'], video:'https://www.youtube.com/watch?v=yD1BtxTcMok'},
-  {id:'wallbar_stretch', name:'Растяжка у шведской стенки', equip:['wallbar'], muscles:['mobility'], video:'https://www.youtube.com/watch?v=rtW54YJUj30'}
-];
+const translations = {
+    ru: {
+        title: "QR Coach",
+        equipmentLabel: "Выберите оборудование:",
+        pullup_bar: "Турник",
+        dip_bars: "Брусья",
+        bench: "Лавочка",
+        incline_bench: "Наклонная скамья для пресса",
+        swedish_wall: "Шведская стенка",
+        levelLabel: "Выберите уровень:",
+        beginner: "Начинающий",
+        intermediate: "Средний",
+        advanced: "Продвинутый",
+        goalLabel: "Выберите группу мышц:",
+        chest: "Грудь",
+        back: "Спина",
+        abs: "Пресс",
+        arms: "Руки",
+        legs: "Ноги",
+        cardio: "Кардио",
+        generateBtn: "Составить план",
+        planTitle: "Ваш план тренировки:"
+    },
+    en: {
+        title: "QR Coach",
+        equipmentLabel: "Select equipment:",
+        pullup_bar: "Pull-up bar",
+        dip_bars: "Dip bars",
+        bench: "Bench",
+        incline_bench: "Incline bench for abs",
+        swedish_wall: "Swedish wall",
+        levelLabel: "Select level:",
+        beginner: "Beginner",
+        intermediate: "Intermediate",
+        advanced: "Advanced",
+        goalLabel: "Select muscle group:",
+        chest: "Chest",
+        back: "Back",
+        abs: "Abs",
+        arms: "Arms",
+        legs: "Legs",
+        cardio: "Cardio",
+        generateBtn: "Generate plan",
+        planTitle: "Your workout plan:"
+    },
+    kz: {
+        title: "QR Coach",
+        equipmentLabel: "Жабдықты таңдаңыз:",
+        pullup_bar: "Турник",
+        dip_bars: "Брусья",
+        bench: "Орындық",
+        incline_bench: "Қиғаш орындық (пресс үшін)",
+        swedish_wall: "Швед қабырғасы",
+        levelLabel: "Деңгейіңізді таңдаңыз:",
+        beginner: "Жаңадан бастаушы",
+        intermediate: "Орташа",
+        advanced: "Жетілдірілген",
+        goalLabel: "Бұлшықет тобын таңдаңыз:",
+        chest: "Кеуде",
+        back: "Арқа",
+        abs: "Пресс",
+        arms: "Қолдар",
+        legs: "Аяқтар",
+        cardio: "Кардио",
+        generateBtn: "Жоспар құру",
+        planTitle: "Сіздің жаттығу жоспарыңыз:"
+    }
+};
 
-function generatePlan(){
-  const checked = Array.from(document.querySelectorAll('.equip:checked')).map(i=>i.value);
-  const level = document.getElementById('level').value;
-  const goal = document.getElementById('goal').value;
+const exercises = {
+    cardio: [
+        { name: "Скакалка", link: "https://youtube.com/shorts/UZs7YFGms5U?si=46in_gJZnx74c7zf" },
+        { name: "Берпи", link: "https://youtu.be/50-0F_gQHFI?si=c4VrUjam-AwPQscW" },
+    ],
+    // Остальные группы мышц сюда вставляем так же
+};
 
-  let candidates = EXERCISES.filter(ex=>{
-    if(checked.length===0) return ex.equip.length===0 || ex.muscles.includes(goal) || goal==='cardio';
-    if(ex.equip.length>0) return ex.equip.some(e=>checked.includes(e)) && (ex.muscles.includes(goal) || goal==='cardio' || goal==='fullbody');
-    return ex.equip.length===0 && (ex.muscles.includes(goal) || goal==='cardio');
-  });
-
-  if(candidates.length<3){
-    const extras = EXERCISES.filter(ex=>ex.muscles.includes(goal) && !candidates.includes(ex));
-    candidates = candidates.concat(extras).slice(0,5);
-  } else {
-    candidates = candidates.slice(0,6);
-  }
-
-  const repScheme = {
-    beginner:{sets:'3',reps:'8-12',note:'отдых 60–90 сек'},
-    intermediate:{sets:'4',reps:'6-10',note:'отдых 45–75 сек'},
-    advanced:{sets:'5',reps:'4-8',note:'отдых 30–60 сек'}
-  }[level];
-
-  const planDiv = document.getElementById('plan');
-  planDiv.innerHTML = `<div style="margin-bottom:8px"><strong>Оборудование:</strong> ${checked.length?checked.join(', '):'не выбрано (кардио / упражнения без снарядов)'}</div>`;
-  planDiv.innerHTML += `<div style="margin-bottom:12px"><strong>Цель:</strong> ${document.getElementById('goal').options[document.getElementById('goal').selectedIndex].text} — <strong>${repScheme.sets} подхода по ${repScheme.reps} повторений</strong>, ${repScheme.note}</div>`;
-  planDiv.innerHTML += `<div style="margin-bottom:12px"><em>Выполните все упражнения по кругу в указанном количестве подходов и повторений. Между упражнениями отдых 30–60 сек, между кругами — 1–2 мин.</em></div>`;
-
-  if(candidates.length===0){
-    planDiv.innerHTML += '<em>К сожалению, под выбранные параметры нет упражнений.</em>';
-    planDiv.style.display='block';
-    return;
-  }
-
-  candidates.forEach(ex=>{
-    const exHtml = document.createElement('div');
-    exHtml.className='exercise';
-    exHtml.innerHTML = `<div class="left"><strong>${ex.name}</strong><div><small>Оборудование: ${ex.equip.length?ex.equip.map(e=>equipmentName(e)).join(', '):'нет'}</small></div></div>
-      <div class="right"><button onclick="openVideo('${ex.video}')">Смотреть</button></div>`;
-    planDiv.appendChild(exHtml);
-  });
-
-  planDiv.style.display='block';
+function setLanguage(lang) {
+    const t = translations[lang];
+    document.getElementById("title").textContent = t.title;
+    document.getElementById("equipment-label").textContent = t.equipmentLabel;
+    document.getElementById("pullup_bar").textContent = t.pullup_bar;
+    document.getElementById("dip_bars").textContent = t.dip_bars;
+    document.getElementById("bench").textContent = t.bench;
+    document.getElementById("incline_bench").textContent = t.incline_bench;
+    document.getElementById("swedish_wall").textContent = t.swedish_wall;
+    document.getElementById("level-label").textContent = t.levelLabel;
+    document.querySelector("#level option[value='beginner']").textContent = t.beginner;
+    document.querySelector("#level option[value='intermediate']").textContent = t.intermediate;
+    document.querySelector("#level option[value='advanced']").textContent = t.advanced;
+    document.getElementById("goal-label").textContent = t.goalLabel;
+    document.querySelector("#goal option[value='chest']").textContent = t.chest;
+    document.querySelector("#goal option[value='back']").textContent = t.back;
+    document.querySelector("#goal option[value='abs']").textContent = t.abs;
+    document.querySelector("#goal option[value='arms']").textContent = t.arms;
+    document.querySelector("#goal option[value='legs']").textContent = t.legs;
+    document.querySelector("#goal option[value='cardio']").textContent = t.cardio;
+    document.getElementById("generate-btn").textContent = t.generateBtn;
 }
 
-function openVideo(url){
-  window.open(url, '_blank');
-}
+document.getElementById("language").addEventListener("change", function(){
+    setLanguage(this.value);
+});
 
-function equipmentName(code){
-  return {
-    bar:'Турник',
-    dip:'Брусья',
-    bench:'Лавочка',
-    decline:'Наклонная скамья для пресса',
-    wallbar:'Шведская стенка'
-  }[code] || code;
-}
+document.getElementById("generate-btn").addEventListener("click", function(){
+    const goal = document.getElementById("goal").value;
+    const lang = document.getElementById("language").value;
+    const t = translations[lang];
+    let planHTML = `<h2>${t.planTitle}</h2>`;
+    if(exercises[goal]) {
+        exercises[goal].forEach(ex => {
+            planHTML += `<div class="exercise">${ex.name} — <a href="${ex.link}" target="_blank">Видео</a></div>`;
+        });
+    } else {
+        planHTML += `<p>Нет упражнений для этой категории</p>`;
+    }
+    document.getElementById("workout-plan").innerHTML = planHTML;
+});
+
+setLanguage("ru");
 </script>
+
 </body>
 </html>
