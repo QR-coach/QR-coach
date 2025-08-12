@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR-coach</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fa;margin:0;padding:20px;display:flex;justify-content:center}
+  .container{width:100%;max-width:800px;background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 24px rgba(20,30,50,0.08)}
+  h1{margin:0 0 16px;font-size:28px}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .col{flex:1;min-width:220px}
+  label{display:block;margin:10px 0 6px;font-weight:600;font-size:16px}
+  .equip-list{display:flex;flex-direction:column;gap:6px}
+  button{background:#2f9e44;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}
+  button.secondary{background:#667085}
+  .plan{margin-top:20px;border-radius:10px;padding:16px;background:#fbfdff;border:1px solid #e6eef8;font-size:16px;line-height:1.5}
+  .exercise{padding:10px;border-radius:8px;background:#fff;border:1px solid #eef3fa;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .exercise .left{max-width:70%}
+  small{color:#6b7280}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>QR-coach</h1>
+  <div class="row">
+    <div class="col">
+      <label>Выберите оборудование (можно несколько):</label>
+      <div class="equip-list">
+        <label><input type="checkbox" value="bar" class="equip"> Турник</label>
+        <label><input type="checkbox" value="dip" class="equip"> Брусья</label>
+        <label><input type="checkbox" value="bench" class="equip"> Лавочка</label>
+        <label><input type="checkbox" value="decline" class="equip"> Наклонная скамья для пресса</label>
+        <label><input type="checkbox" value="wallbar" class="equip"> Шведская стенка</label>
+      </div>
+    </div>
+
+    <div class="col">
+      <label>Уровень подготовки:</label>
+      <select id="level">
+        <option value="beginner">Начинающий</option>
+        <option value="intermediate">Средний</option>
+        <option value="advanced">Продвинутый</option>
+      </select>
+
+      <label>Группа мышц:</label>
+      <select id="goal">
+        <option value="chest">Грудь</option>
+        <option value="back">Спина</option>
+        <option value="abs">Пресс</option>
+        <option value="arms">Руки</option>
+        <option value="legs">Ноги</option>
+        <option value="cardio">Кардио</option>
+      </select>
+
+      <div style="margin-top:12px"><button onclick="generatePlan()">Показать план</button></div>
+    </div>
+  </div>
+
+  <div id="plan" class="plan" style="display:none"></div>
+</div>
+
+<script>
+const EXERCISES = [
+  {id:'skakalka', name:'Скакалка', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=UZs7YFGms5U'},
+  {id:'burpee', name:'Берпи', equip:[], muscles:['cardio','fullbody'], video:'https://www.youtube.com/watch?v=50-0F_gQHFI'},
+  {id:'jump_star', name:'Прыжки «звёздочка»', equip:[], muscles:['cardio','legs'], video:'https://www.youtube.com/watch?v=W25ARtL80Yc'},
+  {id:'run_place', name:'Бег на месте', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=jZe2r6Uc4Ng'},
+  {id:'pull_up', name:'Подтягивания классические', equip:['bar'], muscles:['back','arms'], video:'https://www.youtube.com/watch?v=Smb8BTBBomc'},
+  {id:'pull_up_rev', name:'Подтягивания обратным хватом', equip:['bar'], muscles:['back','arms'], video:'https://www.youtube.com/watch?v=dU6TUDI6Iy8'},
+  {id:'pull_up_wide', name:'Подтягивания широким хватом', equip:['bar'], muscles:['back'], video:'https://www.youtube.com/watch?v=nZfjZn6IH-M'},
+  {id:'knee_raise_hang', name:'Подъём коленей/ног в висе', equip:['bar'], muscles:['abs'], video:'https://www.youtube.com/watch?v=DiboGq-6Xkw'},
+  {id:'dips', name:'Отжимания на брусьях', equip:['dip'], muscles:['chest','arms'], video:'https://www.youtube.com/watch?v=pF_3A66lxpQ'},
+  {id:'knee_raise_dip', name:'Подъём коленей в упоре на брусьях', equip:['dip'], muscles:['abs'], video:'https://www.youtube.com/watch?v=8HLQfi58xhA'},
+  {id:'bench_push_feet', name:'Отжимания ногами на лавке', equip:['bench'], muscles:['chest','legs'], video:'https://www.youtube.com/watch?v=zPTf2Ub_kEs'},
+  {id:'bench_tricep', name:'Обратные отжимания на лавке (трицепс)', equip:['bench'], muscles:['arms'], video:'https://www.youtube.com/watch?v=C6QV5J1gulk'},
+  {id:'box_jump', name:'Прыжки на лавку', equip:['bench'], muscles:['legs','cardio'], video:'https://www.youtube.com/watch?v=oPzFzX87dE4'},
+  {id:'bulgarian', name:'Болгарские выпады с опорой на лавку', equip:['bench'], muscles:['legs'], video:'https://www.youtube.com/watch?v=Ol21mdPfmJs'},
+  {id:'decline_crunch', name:'Скручивания на наклонной скамье', equip:['decline'], muscles:['abs'], video:'https://www.youtube.com/watch?v=7j2xB1SR6jw'},
+  {id:'russian_twist', name:'Русский твист', equip:['decline'], muscles:['abs'], video:'https://www.youtube.com/watch?v=s1MPXo84gFA'},
+  {id:'wallbar_plank', name:'Планка с упором ног в шведской стенке', equip:['wallbar'], muscles:['abs','core'], video:'https://www.youtube.com/watch?v=yD1BtxTcMok'},
+  {id:'wallbar_stretch', name:'Растяжка у шведской стенки', equip:['wallbar'], muscles:['mobility'], video:'https://www.youtube.com/watch?v=rtW54YJUj30'}
+];
+
+function generatePlan(){
+  const checked = Array.from(document.querySelectorAll('.equip:checked')).map(i=>i.value);
+  const level = document.getElementById('level').value;
+  const goal = document.getElementById('goal').value;
+
+  let candidates = EXERCISES.filter(ex=>{
+    if(checked.length===0) return ex.equip.length===0 || ex.muscles.includes(goal) || goal==='cardio';
+    if(ex.equip.length>0) return ex.equip.some(e=>checked.includes(e)) && (ex.muscles.includes(goal) || goal==='cardio' || goal==='fullbody');
+    return ex.equip.length===0 && (ex.muscles.includes(goal) || goal==='cardio');
+  });
+
+  if(candidates.length<3){
+    const extras = EXERCISES.filter(ex=>ex.muscles.includes(goal) && !candidates.includes(ex));
+    candidates = candidates.concat(extras).slice(0,5);
+  } else {
+    candidates = candidates.slice(0,6);
+  }
+
+  const repScheme = {
+    beginner:{sets:'3',reps:'8-12',note:'отдых 60–90 сек'},
+    intermediate:{sets:'4',reps:'6-10',note:'отдых 45–75 сек'},
+    advanced:{sets:'5',reps:'4-8',note:'отдых 30–60 сек'}
+  }[level];
+
+  const planDiv = document.getElementById('plan');
+  planDiv.innerHTML = `<div style="margin-bottom:8px"><strong>Оборудование:</strong> ${checked.length?checked.join(', '):'не выбрано (кардио / упражнения без снарядов)'}</div>`;
+  planDiv.innerHTML += `<div style="margin-bottom:12px"><strong>Цель:</strong> ${document.getElementById('goal').options[document.getElementById('goal').selectedIndex].text} — <strong>${repScheme.sets} подхода по ${repScheme.reps} повторений</strong>, ${repScheme.note}</div>`;
+  planDiv.innerHTML += `<div style="margin-bottom:12px"><em>Выполните все упражнения по кругу в указанном количестве подходов и повторений. Между упражнениями отдых 30–60 сек, между кругами — 1–2 мин.</em></div>`;
+
+  if(candidates.length===0){
+    planDiv.innerHTML += '<em>К сожалению, под выбранные параметры нет упражнений.</em>';
+    planDiv.style.display='block';
+    return;
+  }
+
+  candidates.forEach(ex=>{
+    const exHtml = document.createElement('div');
+    exHtml.className='exercise';
+    exHtml.innerHTML = `<div class="left"><strong>${ex.name}</strong><div><small>Оборудование: ${ex.equip.length?ex.equip.map(e=>equipmentName(e)).join(', '):'нет'}</small></div></div>
+      <div class="right"><button onclick="openVideo('${ex.video}')">Смотреть</button></div>`;
+    planDiv.appendChild(exHtml);
+  });
+
+  planDiv.style.display='block';
+}
+
+function openVideo(url){
+  window.open(url, '_blank');
+}
+
+function equipmentName(code){
+  return {
+    bar:'Турник',
+    dip:'Брусья',
+    bench:'Лавочка',
+    decline:'Наклонная скамья для пресса',
+    wallbar:'Шведская стенка'
+  }[code] || code;
+}
+</script>
+</body>
+</html>
