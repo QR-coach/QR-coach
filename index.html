@@ -13,12 +13,25 @@
     color: #fff;
   }
   .container {
+    position: relative; /* для позиционирования переключателя языка */
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
     background: rgba(0,0,0,0.6);
     border-radius: 12px;
     margin-top: 40px;
+  }
+  .lang-switch {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+  .lang-switch select {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 8px;
+    padding: 6px 10px;
   }
   h1 { text-align: center; }
   label { font-weight: bold; display: block; margin-top: 10px; }
@@ -62,22 +75,31 @@
 </head>
 <body>
 <div class="container">
-  <h1>Тренировки по QR</h1>
-  <label>Выберите оборудование:</label>
-  <label><input type="checkbox" value="bar"> Турник</label>
-  <label><input type="checkbox" value="dip"> Брусья</label>
-  <label><input type="checkbox" value="bench"> Лавочка</label>
-  <label><input type="checkbox" value="decline"> Наклонная скамья</label>
-  <label><input type="checkbox" value="wallbar"> Шведская стенка</label>
+  <div class="lang-switch">
+    <select id="langSelect" onchange="applyLanguage(this.value)">
+      <option value="ru">RU</option>
+      <option value="kz">KZ</option>
+      <option value="en">EN</option>
+    </select>
+  </div>
 
-  <label>Уровень:</label>
+  <h1 id="title">Тренировки по QR</h1>
+
+  <label id="equipLabel">Выберите оборудование:</label>
+  <label><input type="checkbox" value="bar"> <span data-eq="bar">Турник</span></label>
+  <label><input type="checkbox" value="dip"> <span data-eq="dip">Брусья</span></label>
+  <label><input type="checkbox" value="bench"> <span data-eq="bench">Лавочка</span></label>
+  <label><input type="checkbox" value="decline"> <span data-eq="decline">Наклонная скамья</span></label>
+  <label><input type="checkbox" value="wallbar"> <span data-eq="wallbar">Шведская стенка</span></label>
+
+  <label id="levelLabel">Уровень:</label>
   <select id="level">
     <option value="beginner">Начинающий</option>
     <option value="intermediate">Средний</option>
     <option value="advanced">Продвинутый</option>
   </select>
 
-  <label>Группа мышц:</label>
+  <label id="goalLabel">Группа мышц:</label>
   <select id="goal">
     <option value="chest">Грудь</option>
     <option value="back">Спина</option>
@@ -87,18 +109,155 @@
     <option value="cardio">Кардио</option>
   </select>
 
-  <button onclick="generatePlan()">Составить план</button>
+  <button id="generateBtn" onclick="generatePlan()">Составить план</button>
   <div id="plan"></div>
 </div>
 
 <div id="modal" class="modal">
   <div class="modal-content">
-    <p>Под выбранную комбинацию оборудования и группы мышц упражнения не найдены. Пожалуйста, измените выбор.</p>
+    <p id="modalText">Под выбранную комбинацию оборудования и группы мышц упражнения не найдены. Пожалуйста, измените выбор.</p>
     <button onclick="closeModal()">OK</button>
   </div>
 </div>
 
 <script>
+// ===== i18n словари =====
+const I18N = {
+  ru: {
+    title: 'Тренировки по QR',
+    equipLabel: 'Выберите оборудование:',
+    levelLabel: 'Уровень:',
+    goalLabel: 'Группа мышц:',
+    generate: 'Составить план',
+    modalText: 'Под выбранную комбинацию оборудования и группы мышц упражнения не найдены. Пожалуйста, измените выбор.',
+    technique: 'Смотреть технику',
+    equipment: { bar:'Турник', dip:'Брусья', bench:'Лавочка', decline:'Наклонная скамья', wallbar:'Шведская стенка' },
+    levels: { beginner:'Начинающий', intermediate:'Средний', advanced:'Продвинутый' },
+    goals: { chest:'Грудь', back:'Спина', abs:'Пресс', arms:'Руки', legs:'Ноги', cardio:'Кардио' }
+  },
+  kz: {
+    title: 'QR арқылы жаттығулар',
+    equipLabel: 'Жабдықты таңдаңыз:',
+    levelLabel: 'Деңгей:',
+    goalLabel: 'Бұлшықет тобы:',
+    generate: 'Жоспар құру',
+    modalText: 'Таңдалған комбинацияға сәйкес жаттығулар табылмады. Таңдауды өзгертіңіз.',
+    technique: 'Техниканы көру',
+    equipment: { bar:'Турник', dip:'Брусья', bench:'Орындық', decline:'Көлбеу орындық', wallbar:'Швед қабырғасы' },
+    levels: { beginner:'Бастаушы', intermediate:'Орта', advanced:'Жоғары' },
+    goals: { chest:'Кеуде', back:'Арқа', abs:'Пресс', arms:'Қол', legs:'Аяқ', cardio:'Кардио' }
+  },
+  en: {
+    title: 'QR Workouts',
+    equipLabel: 'Select equipment:',
+    levelLabel: 'Level:',
+    goalLabel: 'Muscle group:',
+    generate: 'Generate plan',
+    modalText: 'No exercises found for the selected combination. Please change your selection.',
+    technique: 'Watch technique',
+    equipment: { bar:'Pull-up bar', dip:'Parallel bars', bench:'Bench', decline:'Decline bench', wallbar:'Wall bars' },
+    levels: { beginner:'Beginner', intermediate:'Intermediate', advanced:'Advanced' },
+    goals: { chest:'Chest', back:'Back', abs:'Abs', arms:'Arms', legs:'Legs', cardio:'Cardio' }
+  }
+};
+
+// Переводы названий упражнений по их текущему (русскому) имени
+const EX_NAMES = {
+  ru: {
+    'Скакалка':'Скакалка',
+    'Берпи':'Берпи',
+    'Прыжки с разведением рук':'Прыжки с разведением рук',
+    'Бег на месте':'Бег на месте',
+    'Подтягивания классические':'Подтягивания классические',
+    'Растяжка (разведение ног - вис)':'Растяжка (разведение ног - вис)',
+    'Подтягивания обратным хватом':'Подтягивания обратным хватом',
+    'Планка с упором ног в стенку':'Планка с упором ног в стенку',
+    'Подтягивания широким хватом':'Подтягивания широким хватом',
+    'Русский твист':'Русский твист',
+    'Подъём коленей/ног в висе':'Подъём коленей/ног в висе',
+    'Скручивания на наклонной скамье':'Скручивания на наклонной скамье',
+    'Болгарские выпады':'Болгарские выпады',
+    'Прыжки на лавку':'Прыжки на лавку',
+    'Отжимания на брусьях':'Отжимания на брусьях',
+    'Подъём коленей в упоре на брусьях':'Подъём коленей в упоре на брусьях',
+    'Отжимания ногами на лавке':'Отжимания ногами на лавке',
+    'Обратные отжимания на лавке':'Обратные отжимания на лавке'
+  },
+  kz: {
+    'Скакалка':'Секіртпе',
+    'Берпи':'Берпи',
+    'Прыжки с разведением рук':'Қолды ашып секіру',
+    'Бег на месте':'Орнында жүгіру',
+    'Подтягивания классические':'Классикалық тартылу',
+    'Растяжка (разведение ног - вис)':'Созылу (аяқтарды ашу, іліп тұру)',
+    'Подтягивания обратным хватом':'Кері қармаумен тартылу',
+    'Планка с упором ног в стенку':'Қабырғада аяқ тіреп планка',
+    'Подтягивания широким хватом':'Кең қармаумен тартылу',
+    'Русский твист':'Орысша бұралу',
+    'Подъём коленей/ног в висе':'Ілініп тұрып тізе/аяқ көтеру',
+    'Скручивания на наклонной скамье':'Көлбеу орындықта бұралу',
+    'Болгарские выпады':'Болгариялық сплит-присед',
+    'Прыжки на лавку':'Орындыққа секіру',
+    'Отжимания на брусьях':'Брусьяда итеру',
+    'Подъём коленей в упоре на брусьях':'Брусьяда тізе көтеру',
+    'Отжимания ногами на лавке':'Аяқ орындықта итеру',
+    'Обратные отжимания на лавке':'Орындықта кері итеру'
+  },
+  en: {
+    'Скакалка':'Jump rope',
+    'Берпи':'Burpee',
+    'Прыжки с разведением рук':'Jumping jacks',
+    'Бег на месте':'Running in place',
+    'Подтягивания классические':'Pull-ups (standard)',
+    'Растяжка (разведение ног - вис)':'Stretch (leg spread hang)',
+    'Подтягивания обратным хватом':'Chin-ups (supinated)',
+    'Планка с упором ног в стенку':'Plank (feet on wall bars)',
+    'Подтягивания широким хватом':'Wide-grip pull-ups',
+    'Русский твист':'Russian twist',
+    'Подъём коленей/ног в висе':'Hanging knee/leg raises',
+    'Скручивания на наклонной скамье':'Decline bench crunches',
+    'Болгарские выпады':'Bulgarian split squats',
+    'Прыжки на лавку':'Box jumps (bench)',
+    'Отжимания на брусьях':'Dips (parallel bars)',
+    'Подъём коленей в упоре на брусьях':'Knee raises on parallel bars',
+    'Отжимания ногами на лавке':'Decline push-ups (feet on bench)',
+    'Обратные отжимания на лавке':'Bench triceps dips'
+  }
+};
+
+let currentLang = 'ru';
+
+function applyLanguage(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  const t = I18N[lang];
+  // Заголовки и подписи
+  document.getElementById('title').textContent = t.title;
+  document.getElementById('equipLabel').textContent = t.equipLabel;
+  document.getElementById('levelLabel').textContent = t.levelLabel;
+  document.getElementById('goalLabel').textContent = t.goalLabel;
+  document.getElementById('generateBtn').textContent = t.generate;
+  document.getElementById('modalText').textContent = t.modalText;
+  // Оборудование
+  document.querySelectorAll('[data-eq]').forEach(span=>{
+    const key = span.getAttribute('data-eq');
+    span.textContent = t.equipment[key];
+  });
+  // Опции уровней
+  document.querySelectorAll('#level option').forEach(opt=>{
+    opt.textContent = t.levels[opt.value];
+  });
+  // Опции целей
+  document.querySelectorAll('#goal option').forEach(opt=>{
+    opt.textContent = t.goals[opt.value];
+  });
+  // Перерисовать уже сгенерированный план под новый язык (если он есть)
+  if(document.getElementById('plan').children.length){
+    generatePlan();
+  }
+}
+
+// ===== База упражнений (оставлена без изменений логики) =====
 const EXERCISES = [
   {name:'Скакалка', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=UZs7YFGms5U'},
   {name:'Берпи', equip:[], muscles:['cardio'], video:'https://www.youtube.com/watch?v=50-0F_gQHFI'},
@@ -119,6 +278,10 @@ const EXERCISES = [
   {name:'Отжимания ногами на лавке', equip:['bench'], muscles:['chest','legs'], video:'https://www.youtube.com/watch?v=zPTf2Ub_kEs'},
   {name:'Обратные отжимания на лавке', equip:['bench'], muscles:['arms'], video:'https://www.youtube.com/watch?v=C6QV5J1gulk'}
 ];
+
+function translateExerciseName(russianName){
+  return (EX_NAMES[currentLang] && EX_NAMES[currentLang][russianName]) || russianName;
+}
 
 function generatePlan(){
   const checked = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(c=>c.value);
@@ -141,9 +304,11 @@ function generatePlan(){
     return;
   }
 
+  const t = I18N[currentLang];
   let html = '';
   filtered.forEach(ex => {
-    html += `<div class="exercise"><strong>${ex.name}</strong><br><button onclick=\"window.open('${ex.video}','_blank')\">Смотреть технику</button></div>`;
+    const exName = translateExerciseName(ex.name);
+    html += `<div class="exercise"><strong>${exName}</strong><br><button onclick=\"window.open('${ex.video}','_blank')\">${t.technique}</button></div>`;
   });
 
   document.getElementById('plan').innerHTML = html;
@@ -151,6 +316,9 @@ function generatePlan(){
 function closeModal(){
   document.getElementById('modal').style.display = 'none';
 }
+
+// Применяем язык при загрузке
+applyLanguage('ru');
 </script>
 </body>
 </html>
